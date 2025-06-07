@@ -1,24 +1,18 @@
 import os
 import subprocess
 import threading
-import time
-from collections import deque
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton, QLineEdit, QTextEdit,
-    QFileDialog, QVBoxLayout, QHBoxLayout, QComboBox, QMessageBox, QTextBrowser, QCheckBox, QProgressBar
+    QFileDialog, QVBoxLayout, QHBoxLayout, QComboBox, QMessageBox, QTextBrowser,
+    QCheckBox, QProgressBar
 )
-from PyQt5.QtCore import Qt, QMetaObject, Q_ARG, QTimer
+from PyQt5.QtCore import Qt, QTimer
 
 class VideoReupTool(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("FFmpeg Reup Video Tool - Full Auto Advanced")
         self.resize(900, 750)
-
-        self.log_queue = deque()
-        self.log_timer = QTimer()
-        self.log_timer.timeout.connect(self.flush_log_queue)
-        self.log_timer.start(50)  # Flush log every 50ms
 
         # Widgets
         self.input_folder = QLineEdit()
@@ -31,11 +25,11 @@ class VideoReupTool(QWidget):
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(0)
 
-        browse_input_btn = QPushButton("📁 Chọn thư mục video")
-        browse_output_btn = QPushButton("📁 Chọn thư mục xuất")
-        load_script_btn = QPushButton("📜 Load mã FFmpeg")
-        self.run_btn = QPushButton("⚙️ Chạy xử lý")
-        download_btn = QPushButton("⬇️ Tải video")
+        browse_input_btn = QPushButton("\U0001F4C1 Chọn thư mục video")
+        browse_output_btn = QPushButton("\U0001F4C1 Chọn thư mục xuất")
+        load_script_btn = QPushButton("\U0001F4DC Load mã FFmpeg")
+        self.run_btn = QPushButton("\u2699\ufe0f Chạy xử lý")
+        download_btn = QPushButton("\u2B07\ufe0f Tải video")
 
         # Layouts
         layout = QVBoxLayout()
@@ -55,16 +49,16 @@ class VideoReupTool(QWidget):
         layout.addLayout(hlayout1)
         layout.addLayout(hlayout2)
         layout.addLayout(hlayout3)
-        layout.addWidget(QLabel("📋 Dán danh sách URL TikTok (mỗi dòng 1 link):"))
+        layout.addWidget(QLabel("\U0001F4CB Dán danh sách URL TikTok (mỗi dòng 1 link):"))
         layout.addWidget(self.download_url_list)
         layout.addWidget(download_btn)
         layout.addWidget(self.reup_after_download)
-        layout.addWidget(QLabel("📄 Preview mã FFmpeg:"))
+        layout.addWidget(QLabel("\U0001F4C4 Preview mã FFmpeg:"))
         layout.addWidget(self.command_preview)
         layout.addWidget(self.run_btn)
-        layout.addWidget(QLabel("📊 Log xử lý:"))
+        layout.addWidget(QLabel("\U0001F4CA Log xử lý:"))
         layout.addWidget(self.log_browser)
-        layout.addWidget(QLabel("🔁 Tiến độ:"))
+        layout.addWidget(QLabel("\U0001F501 Tiến độ:"))
         layout.addWidget(self.progress_bar)
 
         self.setLayout(layout)
@@ -106,12 +100,10 @@ class VideoReupTool(QWidget):
     def start_processing_thread(self):
         self.run_btn.setEnabled(False)
         self.log_browser.clear()
-        thread = threading.Thread(target=self.process_videos)
-        thread.start()
+        threading.Thread(target=self.process_videos).start()
 
     def start_batch_download_thread(self):
-        thread = threading.Thread(target=self.download_videos_from_list)
-        thread.start()
+        threading.Thread(target=self.download_videos_from_list).start()
 
     def process_videos(self):
         input_dir = self.input_folder.text()
@@ -130,14 +122,11 @@ class VideoReupTool(QWidget):
             output_path = os.path.join(output_dir, os.path.splitext(file)[0] + "_reup.mp4")
             command = command_template.replace("{input}", f'"{input_path}"').replace("{output}", f'"{output_path}"')
             try:
-                subprocess.run(command, shell=True, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                self.log_queue.append(f"✅ Xử lý xong: {file}")
+                subprocess.run(command, shell=True, check=True)
+                self.log_to_browser(f"✅ Xử lý xong: {file}")
             except subprocess.CalledProcessError as e:
-                self.log_queue.append(f"❌ Lỗi: {file}\n{e}")
-            percent = int((i + 1) / total * 100)
-            if percent != self.progress_bar.value():
-                self.progress_bar.setValue(percent)
-            time.sleep(0.01)
+                self.log_to_browser(f"❌ Lỗi: {file}\n{e}")
+            self.progress_bar.setValue(int((i + 1) / total * 100))
 
         self.run_btn.setEnabled(True)
 
@@ -149,30 +138,22 @@ class VideoReupTool(QWidget):
             self.show_warning("Thiếu thông tin", "Vui lòng nhập URL và chọn thư mục video.")
             return
 
-        for i, url in enumerate(urls):
+        for url in urls:
             if url.strip():
                 try:
                     cmd = f'yt-dlp --no-playlist -o "{output_dir}/%(title)s.%(ext)s" "{url.strip()}"'
                     subprocess.run(cmd, shell=True, check=True)
-                    self.log_queue.append(f"✅ Đã tải: {url.strip()}")
+                    self.log_to_browser(f"✅ Đã tải: {url.strip()}")
                 except subprocess.CalledProcessError as e:
-                    self.log_queue.append(f"❌ Lỗi tải: {url.strip()}\n{e}")
-            time.sleep(0.01)
-
+                    self.log_to_browser(f"❌ Lỗi tải: {url.strip()}\n{e}")
         if self.reup_after_download.isChecked():
             self.start_processing_thread()
 
     def show_warning(self, title, message):
-        QMetaObject.invokeMethod(
-            self,
-            lambda: QMessageBox.warning(self, title, message),
-            Qt.QueuedConnection
-        )
+        QTimer.singleShot(0, lambda: QMessageBox.warning(self, title, message))
 
-    def flush_log_queue(self):
-        if self.log_queue:
-            message = self.log_queue.popleft()
-            self.log_browser.append(message)
+    def log_to_browser(self, message):
+        QTimer.singleShot(0, lambda: self.log_browser.append(message))
 
 if __name__ == '__main__':
     app = QApplication([])
