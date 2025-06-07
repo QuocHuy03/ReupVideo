@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -i nhac.mp3 -map 0:v -map 1:a -shortest -c:v copy -c:a aac {output}.mp4

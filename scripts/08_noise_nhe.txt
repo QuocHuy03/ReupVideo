@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "noise=alls=10:allf=t" -c:a copy {output}.mp4

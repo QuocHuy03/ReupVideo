@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -filter:v "crop=iw-100:ih-50:100:50" -c:a copy {output}.mp4

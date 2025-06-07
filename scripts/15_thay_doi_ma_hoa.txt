@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -c:v libx265 -c:a aac {output}.mp4

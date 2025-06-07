@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=black" -c:a copy {output}.mp4

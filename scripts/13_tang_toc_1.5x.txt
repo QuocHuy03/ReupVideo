@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -filter:v "setpts=0.67*PTS" -filter:a "atempo=1.5" {output}.mp4

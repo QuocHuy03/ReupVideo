@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "hflip" -c:a copy {output}.mp4
