@@ -1,76 +1,129 @@
 import os
 import subprocess
-import threading
+import urllib.request
+import zipfile
+import shutil
+import socket
+import time
+
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton, QLineEdit, QTextEdit,
-    QFileDialog, QVBoxLayout, QHBoxLayout, QComboBox, QMessageBox, QTextBrowser,
-    QCheckBox, QProgressBar
+    QFileDialog, QVBoxLayout, QHBoxLayout, QComboBox, QMessageBox,
+    QTableWidget, QTableWidgetItem, QHeaderView
 )
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt
+from qt_material import apply_stylesheet
+
+def check_internet(timeout=3):
+    try:
+        socket.setdefaulttimeout(timeout)
+        host = socket.gethostbyname("one.one.one.one")
+        s = socket.create_connection((host, 80), timeout)
+        s.close()
+        return True
+    except:
+        return False
+
+def ensure_ffmpeg_installed(log_func=print):
+    ffmpeg_dir = os.path.join(os.getcwd(), "ffmpeg")
+    ffmpeg_exe = os.path.join(ffmpeg_dir, "ffmpeg.exe")
+
+    if os.path.isfile(ffmpeg_exe):
+        os.environ["PATH"] += os.pathsep + ffmpeg_dir
+        log_func("✅ FFmpeg đã có sẵn.")
+        return True
+
+    log_func("⏳ Đang tải và cài FFmpeg...")
+
+    try:
+        url = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
+        local_zip = "ffmpeg.zip"
+
+        urllib.request.urlretrieve(url, local_zip)
+
+        with zipfile.ZipFile(local_zip, 'r') as zip_ref:
+            zip_ref.extractall("ffmpeg_temp")
+
+        for root, dirs, files in os.walk("ffmpeg_temp"):
+            for file in files:
+                if file == "ffmpeg.exe":
+                    os.makedirs(ffmpeg_dir, exist_ok=True)
+                    shutil.copy(os.path.join(root, file), ffmpeg_exe)
+                    break
+
+        shutil.rmtree("ffmpeg_temp")
+        os.remove(local_zip)
+
+        os.environ["PATH"] += os.pathsep + ffmpeg_dir
+        log_func("✅ Cài đặt FFmpeg hoàn tất.")
+        return True
+    except Exception as e:
+        log_func(f"❌ Lỗi khi tải FFmpeg: {e}")
+        return False
 
 class VideoReupTool(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("FFmpeg Reup Video Tool - Full Auto Advanced")
+        apply_stylesheet(self, theme='light_blue.xml')
+        self.setWindowTitle("FFmpeg Reup Video Tool")
         self.resize(900, 750)
 
-        # Widgets
+        self.build_ui()
+
+        if not check_internet():
+            QMessageBox.critical(self, "Không có mạng", "Không thể kết nối Internet để tải FFmpeg.")
+            exit(1)
+
+        if not ensure_ffmpeg_installed():
+            QMessageBox.critical(self, "Lỗi FFmpeg", "Không thể cài đặt FFmpeg.")
+            exit(1)
+
+        self.connect_events()
+        self.load_script_list()
+
+    def build_ui(self):
         self.input_folder = QLineEdit()
         self.output_folder = QLineEdit()
-        self.download_url_list = QTextEdit()
         self.script_combo = QComboBox()
         self.command_preview = QTextEdit()
-        self.log_browser = QTextBrowser()
-        self.reup_after_download = QCheckBox("Reup sau khi tải")
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setValue(0)
 
-        browse_input_btn = QPushButton("\U0001F4C1 Chọn thư mục video")
-        browse_output_btn = QPushButton("\U0001F4C1 Chọn thư mục xuất")
-        load_script_btn = QPushButton("\U0001F4DC Load mã FFmpeg")
-        self.run_btn = QPushButton("\u2699\ufe0f Chạy xử lý")
-        download_btn = QPushButton("\u2B07\ufe0f Tải video")
+        self.browse_input_btn = QPushButton("📁 Chọn thư mục video")
+        self.browse_output_btn = QPushButton("📁 Chọn thư mục xuất")
+        self.load_script_btn = QPushButton("📜 Load mã FFmpeg")
+        self.run_btn = QPushButton("⚙️ Chạy xử lý")
 
-        # Layouts
+        self.result_table = QTableWidget()
+        self.result_table.setColumnCount(3)
+        self.result_table.setHorizontalHeaderLabels(["TÊN VIDEO", "THỜI GIAN (S)", "TRẠNG THÁI"])
+        self.result_table.horizontalHeader().setStretchLastSection(False)
+        self.result_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.result_table.setEditTriggers(QTableWidget.NoEditTriggers)
+        header = self.result_table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.Stretch)         # TÊN VIDEO kéo dãn linh hoạt
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents) # THỜI GIAN tự co theo nội dung
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents) # TRẠNG THÁI tự co theo nội dung
+
         layout = QVBoxLayout()
+        layout.setSpacing(10)
 
-        hlayout1 = QHBoxLayout()
-        hlayout1.addWidget(self.input_folder)
-        hlayout1.addWidget(browse_input_btn)
+        for w in [[self.input_folder, self.browse_input_btn], [self.output_folder, self.browse_output_btn], [self.script_combo, self.load_script_btn]]:
+            hlayout = QHBoxLayout()
+            for item in w: hlayout.addWidget(item)
+            layout.addLayout(hlayout)
 
-        hlayout2 = QHBoxLayout()
-        hlayout2.addWidget(self.output_folder)
-        hlayout2.addWidget(browse_output_btn)
-
-        hlayout3 = QHBoxLayout()
-        hlayout3.addWidget(self.script_combo)
-        hlayout3.addWidget(load_script_btn)
-
-        layout.addLayout(hlayout1)
-        layout.addLayout(hlayout2)
-        layout.addLayout(hlayout3)
-        layout.addWidget(QLabel("\U0001F4CB Dán danh sách URL TikTok (mỗi dòng 1 link):"))
-        layout.addWidget(self.download_url_list)
-        layout.addWidget(download_btn)
-        layout.addWidget(self.reup_after_download)
-        layout.addWidget(QLabel("\U0001F4C4 Preview mã FFmpeg:"))
+        layout.addWidget(QLabel("📄 Preview mã FFmpeg:"))
         layout.addWidget(self.command_preview)
         layout.addWidget(self.run_btn)
-        layout.addWidget(QLabel("\U0001F4CA Log xử lý:"))
-        layout.addWidget(self.log_browser)
-        layout.addWidget(QLabel("\U0001F501 Tiến độ:"))
-        layout.addWidget(self.progress_bar)
+        layout.addWidget(QLabel("📋 Bảng kết quả xử lý:"))
+        layout.addWidget(self.result_table)
 
         self.setLayout(layout)
 
-        # Connections
-        browse_input_btn.clicked.connect(self.select_input_folder)
-        browse_output_btn.clicked.connect(self.select_output_folder)
-        load_script_btn.clicked.connect(self.load_ffmpeg_script)
-        self.run_btn.clicked.connect(self.start_processing_thread)
-        download_btn.clicked.connect(self.start_batch_download_thread)
-
-        self.load_script_list()
+    def connect_events(self):
+        self.browse_input_btn.clicked.connect(self.select_input_folder)
+        self.browse_output_btn.clicked.connect(self.select_output_folder)
+        self.load_script_btn.clicked.connect(self.load_ffmpeg_script)
+        self.run_btn.clicked.connect(self.process_videos)
 
     def select_input_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Chọn thư mục chứa video")
@@ -83,80 +136,57 @@ class VideoReupTool(QWidget):
             self.output_folder.setText(folder)
 
     def load_script_list(self):
-        if not os.path.exists("scripts"):
-            os.makedirs("scripts")
+        os.makedirs("scripts", exist_ok=True)
         self.script_combo.clear()
-        for file in os.listdir("scripts"):
-            if file.endswith(".txt"):
-                self.script_combo.addItem(file)
+        self.script_combo.addItems([f for f in os.listdir("scripts") if f.endswith(".txt")])
 
     def load_ffmpeg_script(self):
         selected = self.script_combo.currentText()
         if selected:
-            path = os.path.join("scripts", selected)
-            with open(path, "r", encoding="utf-8") as f:
+            with open(os.path.join("scripts", selected), "r", encoding="utf-8") as f:
                 self.command_preview.setPlainText(f.read())
 
-    def start_processing_thread(self):
-        self.run_btn.setEnabled(False)
-        self.log_browser.clear()
-        threading.Thread(target=self.process_videos).start()
-
-    def start_batch_download_thread(self):
-        threading.Thread(target=self.download_videos_from_list).start()
-
     def process_videos(self):
+        self.run_btn.setEnabled(False)
+        self.result_table.setRowCount(0)
+
         input_dir = self.input_folder.text()
         output_dir = self.output_folder.text()
         command_template = self.command_preview.toPlainText().strip()
 
         if not input_dir or not output_dir or not command_template:
-            self.show_warning("Thiếu dữ liệu", "Vui lòng điền đầy đủ thông tin.")
+            QMessageBox.warning(self, "Thiếu dữ liệu", "Vui lòng điền đầy đủ thông tin.")
             self.run_btn.setEnabled(True)
             return
 
         files = [f for f in os.listdir(input_dir) if f.lower().endswith(('.mp4', '.mov', '.avi', '.mkv'))]
-        total = len(files)
-        for i, file in enumerate(files):
+
+        for file in files:
             input_path = os.path.join(input_dir, file)
             output_path = os.path.join(output_dir, os.path.splitext(file)[0] + "_reup.mp4")
+
+            row = self.result_table.rowCount()
+            self.result_table.insertRow(row)
+            self.result_table.setItem(row, 0, QTableWidgetItem(file))
+            self.result_table.setItem(row, 1, QTableWidgetItem("..."))
+            self.result_table.setItem(row, 2, QTableWidgetItem("🔧 Đang xử lý"))
+
             command = command_template.replace("{input}", f'"{input_path}"').replace("{output}", f'"{output_path}"')
             try:
+                start_time = time.time()
                 subprocess.run(command, shell=True, check=True)
-                self.log_to_browser(f"✅ Xử lý xong: {file}")
-            except subprocess.CalledProcessError as e:
-                self.log_to_browser(f"❌ Lỗi: {file}\n{e}")
-            self.progress_bar.setValue(int((i + 1) / total * 100))
+                duration = time.time() - start_time
+                self.result_table.item(row, 1).setText(f"{duration:.2f}")
+                self.result_table.item(row, 2).setText("✅ Hoàn tất")
+            except subprocess.CalledProcessError:
+                self.result_table.item(row, 1).setText("0.00")
+                self.result_table.item(row, 2).setText("❌ Lỗi xử lý")
 
         self.run_btn.setEnabled(True)
 
-    def download_videos_from_list(self):
-        urls = self.download_url_list.toPlainText().strip().splitlines()
-        output_dir = self.input_folder.text().strip()
-
-        if not urls or not output_dir:
-            self.show_warning("Thiếu thông tin", "Vui lòng nhập URL và chọn thư mục video.")
-            return
-
-        for url in urls:
-            if url.strip():
-                try:
-                    cmd = f'yt-dlp --no-playlist -o "{output_dir}/%(title)s.%(ext)s" "{url.strip()}"'
-                    subprocess.run(cmd, shell=True, check=True)
-                    self.log_to_browser(f"✅ Đã tải: {url.strip()}")
-                except subprocess.CalledProcessError as e:
-                    self.log_to_browser(f"❌ Lỗi tải: {url.strip()}\n{e}")
-        if self.reup_after_download.isChecked():
-            self.start_processing_thread()
-
-    def show_warning(self, title, message):
-        QTimer.singleShot(0, lambda: QMessageBox.warning(self, title, message))
-
-    def log_to_browser(self, message):
-        QTimer.singleShot(0, lambda: self.log_browser.append(message))
-
 if __name__ == '__main__':
-    app = QApplication([])
+    import sys
+    app = QApplication(sys.argv)
     window = VideoReupTool()
     window.show()
-    app.exec_()
+    sys.exit(app.exec_())
