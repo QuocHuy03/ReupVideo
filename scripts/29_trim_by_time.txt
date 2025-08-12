@@ -1,0 +1,1 @@
+ffmpeg -y -ss {start} -i {input} -to {end} -c copy {output_mp4}

@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "rotate={angle}*PI/180:ow=rotw({angle}*PI/180):oh=roth({angle}*PI/180):c=black" -c:a copy {output_mp4}

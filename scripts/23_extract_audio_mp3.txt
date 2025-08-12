@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vn -c:a libmp3lame -q:a {mp3_quality} {output_mp3}

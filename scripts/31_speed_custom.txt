@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -filter_complex "[0:v]setpts=PTS/{speed_factor}[v];[0:a]atempo={atempo}[a]" -map "[v]" -map "[a]" {output_mp4}

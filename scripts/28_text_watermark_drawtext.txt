@@ -1,0 +1,6 @@
+# PARAM font type=file label="Font chữ" filter="Fonts (*.ttf *.otf)"
+# PARAM text type=text label="Nội dung" default="Subscribe!"
+# PARAM pos_x type=number label="Vị trí X" default=20 min=0 step=1
+# PARAM pos_y type=number label="Vị trí Y" default=20 min=0 step=1
+# PARAM fontsize type=number label="Cỡ chữ" default=36 min=8 max=200 step=1
+ffmpeg -y -i {input} -vf "drawtext=fontfile={font}:text='{text}':x={pos_x}:y={pos_y}:fontsize={fontsize}:fontcolor=white@0.7:borderw=2" -c:a copy {output_mp4}

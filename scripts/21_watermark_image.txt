@@ -1,0 +1,4 @@
+# PARAM logo type=file label="Ảnh logo" filter="Images (*.png *.jpg *.jpeg)
+# PARAM pos_x type=number label="Vị trí X" default=10 min=0 step=1
+# PARAM pos_y type=number label="Vị trí Y" default=10 min=0 step=1
+ffmpeg -y -i {input} -i {logo} -filter_complex "[1][0]scale2ref=w=iw/6:h=ow/mdar[wm][base];[base][wm]overlay=x={pos_x}:y={pos_y}" -c:a copy {output_mp4}

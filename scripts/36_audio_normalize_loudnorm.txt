@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -filter:a "loudnorm=I=-14:TP=-1.5:LRA=11" -c:v copy {output_mp4}

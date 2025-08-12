@@ -1,0 +1,3 @@
+# PARAM srt type=file label="File phụ đề (SRT)" filter="Subtitles (*.srt)"
+# PARAM fontsize type=number label="Cỡ chữ" default=26 min=10 max=80 step=1
+ffmpeg -y -i {input} -vf "subtitles={srt}:force_style='Fontsize={fontsize}'" -c:a copy {output_mp4}

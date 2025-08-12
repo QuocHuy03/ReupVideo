@@ -1,1 +1,0 @@
-ffmpeg -y -i {input} -vf "boxblur=10:1" -c:a copy {output}.mp4
