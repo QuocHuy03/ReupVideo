@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "fps=60" -c:v libx264 -c:a aac {output}.mp4

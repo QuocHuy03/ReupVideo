@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "unsharp=5:5:1.5:5:5:0.0" -c:a copy {output}.mp4

@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "setpts=0.75*PTS" -af "atempo=1.33" -c:v libx264 -c:a aac {output}.mp4

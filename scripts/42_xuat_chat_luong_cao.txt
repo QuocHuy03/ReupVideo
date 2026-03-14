@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -c:v libx264 -crf 18 -preset slow -c:a aac -b:a 192k {output}.mp4

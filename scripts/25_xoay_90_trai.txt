@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "transpose=2" -c:a copy {output}.mp4

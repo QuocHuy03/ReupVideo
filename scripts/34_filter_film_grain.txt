@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "noise=alls=25:allf=t+u,eq=contrast=1.15:saturation=0.85,vignette=PI/4" -c:a copy {output}.mp4

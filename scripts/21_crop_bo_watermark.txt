@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "crop=in_w:in_h*0.9:0:in_h*0.05" -c:a copy {output}.mp4

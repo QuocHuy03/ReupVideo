@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "scale=iw*1.04:ih*1.04,crop=iw/1.04:ih/1.04" -c:a copy {output}.mp4

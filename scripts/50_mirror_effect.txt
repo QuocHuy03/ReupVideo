@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "split[a][b];[a]hflip[c];[c][b]blend=all_expr='if(gt(X,W/2),A,B)'" -c:a copy {output}.mp4

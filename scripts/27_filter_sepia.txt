@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131" -c:a copy {output}.mp4

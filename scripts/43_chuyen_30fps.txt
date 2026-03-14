@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "fps=30" -c:a copy {output}.mp4

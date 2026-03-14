@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -c:v libx264 -crf 28 -preset fast -c:a aac -b:a 128k {output}.mp4

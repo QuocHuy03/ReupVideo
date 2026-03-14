@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Settings
+settings.json
+
+# Logs
+*.log
+
+# Virtual env
+venv/
+.env/
+
+# IDE
+.vscode/
+.idea/

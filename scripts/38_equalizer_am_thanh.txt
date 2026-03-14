@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -af "equalizer=f=1000:width_type=o:width=2:g=-5,equalizer=f=200:width_type=o:width=2:g=3" -c:v copy {output}.mp4

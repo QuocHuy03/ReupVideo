@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "hflip,eq=contrast=1.1:saturation=1.2:brightness=0.02,noise=alls=8:allf=t+u" -af "volume=1.05" -c:v libx264 -crf 20 -c:a aac {output}.mp4

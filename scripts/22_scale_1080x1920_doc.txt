@@ -1,0 +1,1 @@
+ffmpeg -y -i {input} -vf "scale=-2:1920,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black" -c:a copy {output}.mp4
