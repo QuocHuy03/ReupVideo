@@ -4,7 +4,7 @@ DARK_THEME = """
 QWidget {
  background-color: #0d1117;
  color: #e6edf3;
- font-family: 'Segoe UI', 'Arial', sans-serif;
+ font-family: 'Open Sans', 'Segoe UI', 'Arial', sans-serif;
  font-size: 13px;
 }
 
@@ -373,9 +373,9 @@ QSpinBox:focus, QTimeEdit:focus {
 }
 QSpinBox::up-button, QSpinBox::down-button,
 QTimeEdit::up-button, QTimeEdit::down-button {
- background-color: #21262d;
+ background-color: transparent;
  border: none;
- width: 18px;
+ width: 0px;
 }
 
 /* ===== Log / TextBrowser ===== */

@@ -71,11 +71,6 @@ class ContentHeader(QWidget):
 
         layout.addLayout(text_col, stretch=1)
 
-        # Right: version badge
-        badge = QLabel("ReupPro v2.0")
-        badge.setObjectName("header_badge")
-        layout.addWidget(badge)
-
     def set_page(self, title: str, subtitle: str):
         self.title_lbl.setText(title)
         self.sub_lbl.setText(subtitle)
@@ -109,10 +104,7 @@ class MainWindow(QMainWindow):
 
         logo = QLabel("ReupPro")
         logo.setObjectName("logo_label")
-        version = QLabel("v2.0 | FFmpeg + yt-dlp")
-        version.setObjectName("version_label")
         sidebar_layout.addWidget(logo)
-        sidebar_layout.addWidget(version)
 
         sep = QFrame()
         sep.setFrameShape(QFrame.HLine)

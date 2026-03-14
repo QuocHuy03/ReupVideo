@@ -8,7 +8,7 @@
   "no_watermark_tiktok": true,
   "auto_reup_after_download": false,
   "output_naming": "{name}_reup",
-  "scheduler_enabled": false,
+  "scheduler_enabled": true,
   "scheduler_hour": 6,
   "scheduler_minute": 0,
   "scheduler_action": "download_and_process",
